@@ -1,0 +1,13 @@
+# Anki 自动制卡所需依赖
+
+# OpenAI API 客户端
+openai>=1.0.0
+
+# Azure 语音服务
+azure-cognitiveservices-speech>=1.34.0
+
+# Anki 卡片生成
+genanki>=0.13.0
+
+# YAML 配置文件解析
+pyyaml>=6.0
