@@ -34,7 +34,7 @@ performance:
 # 文件路径配置
 paths:
   # 输入的单词列表 txt 文件路径 (每行一个单词或词组)
-  input_txt: "speaker_words.txt"
+  input_txt: "words.txt"
   
   # 输出的 Anki 包文件名
   output_package: "speakcard.apkg"
