@@ -1,120 +1,231 @@
-# Anki 自动制卡工具
+# 🤖 AI 驱动的 Anki 英语全能制卡助手 (DeepSeek + Azure TTS)
 
-这是一个自动化的 Anki 卡片生成工具，可以批量将单词/词组转换为精美的 Anki 卡片，包含音标、释义、例句和语音。
+这是一个功能强大的自动化工具，利用 **DeepSeek (火山引擎)** 的大语言模型能力和 **Azure TTS** 的顶尖语音合成技术，批量生成高质量、多维度的 Anki 英语学习卡片。
 
-## 功能特性
+它不仅仅是生成单词卡，还支持**听写训练**和**口语回译**，真正实现“听说读写”全方位提升。
 
-- 🤖 **AI 驱动**：使用大语言模型自动生成音标、释义和例句
-- 🔊 **语音合成**：使用 Azure TTS 生成高质量英式发音（慢速+快速）
-- 📝 **批量处理**：从 txt 文件读取单词列表，一键生成卡组
-- ⚙️ **灵活配置**：通过 YAML 配置文件自定义所有参数
-- 🎨 **精美模板**：现代化的卡片设计，支持夜间模式
-- 🧹 **自动清理**：生成完成后自动删除临时音频文件
+![项目封面图或演示GIF]
+*(在此处插入项目整体演示或封面截图)*
 
-## 快速开始
+## ✨ 核心功能
 
-### 1. 安装依赖
+* 🧠 **智能内容生成**：基于 DeepSeek V3/R1 模型，自动生成地道的音标、英文释义、场景例句。
+* 🗣️ **顶级语音合成**：使用 Microsoft Azure TTS，生成包含慢速/常速的单词发音，以及富有情感的例句朗读。
+* 🃏 **三种专业模式**：支持 **词汇卡 (Vocab)**、**听写卡 (Dictation)** 和 **口语卡 (Speaking)** 三种模式并行生成。
+* 🎨 **现代化设计**：精美的 CSS 卡片样式，支持夜间模式，手机/平板/电脑全平台适配。
+* ⚙️ **高度可配置**：通过 YAML 文件灵活调整语速、卡片类型、并发数量等。
 
-```bash
-pip install -r requirements.txt
-```
+---
 
-### 2. 配置参数
+## 🛠️ 第一步：API 申请指南
 
-编辑 `config.yaml` 文件，填入你的 API 密钥和偏好设置：
+本项目需要两个 API 密钥才能运行。请按照以下步骤申请：
+
+### 1. 火山引擎 (DeepSeek) API
+
+用于生成单词的释义、例句和口语训练内容。
+
+1. 注册并登录 [火山引擎控制台](https://www.volcengine.com/)。
+2. 搜索并进入 **“火山方舟 (Ark)”** 服务。
+3. 点击 **“模型推理”** -> **“创建推理接入点”**。
+4. 选择 **DeepSeek-V3** (或 R1) 模型并创建接入点。
+5. 记下你的 **接入点名称 (Endpoint ID)**（例如 `ep-20250203...`，这将作为 model 参数）。
+6. 在 **“API Key 管理”** 中创建一个新的 API Key。
+7. *注意：新用户通常有免费额度，足够生成数千张卡片。*
+
+### 2. Microsoft Azure Speech API
+
+用于生成高质量的真人级语音。
+
+1. 注册并登录 [Azure Portal](https://portal.azure.com/)。
+2. 搜索 **“Speech services” (语音服务)** 并点击创建。
+3. **订阅**：选择“免费试用”或“按量付费”。
+4. **资源组**：新建一个资源组（任意命名）。
+5. **区域 (Region)**：建议选择 `East US` (美东) 或 `East Asia` (东亚)，记下这个区域代码（如 `eastus`）。
+6. **定价层**：选择 **Free F0** (免费层，每月50万字符，足够个人使用)。
+7. 创建完成后，进入资源，在左侧菜单点击 **“Keys and Endpoint”**。
+8. 复制 **Key 1** 和 **Region**。
+
+---
+
+## ⚙️ 第二步：配置文件 (config.yaml) 详解
+
+项目根目录下的 `config.yaml` 是控制中心。修改此文件即可定制你的制卡流程。
+
+### 1. 填写 API 密钥
 
 ```yaml
 api_keys:
-  openai_api_key: "你的密钥"
-  azure_speech_key: "你的密钥"
+  # 火山引擎配置
+  openai_api_key: "你的_VOLCENGINE_API_KEY"
+  openai_base_url: "https://ark.cn-beijing.volces.com/api/v3"
+  openai_model: "你的_接入点名称_例如_ep-2025xxx" 
+  
+  # Azure 语音配置
+  azure_speech_key: "你的_AZURE_KEY"
+  azure_region: "eastus"  # 你的资源区域，如 eastus, eastasia
+  azure_voice_name: "en-GB-SoniaNeural" # 推荐发音人，可在 Azure 文档查找更多
 
+```
+
+### 2. 选择卡片模式 (重要)
+
+你可以同时生成多种类型的卡片，只需在列表中添加即可：
+
+```yaml
+anki:
+  deck_name: "My English Deck"
+  # 可选值: vocab, dictation, speaking
+  # 列表里写什么，就生成什么。可以只写一个，也可以写三个。
+  card_types:
+    - vocab       # 生成词汇卡
+    - dictation   # 生成听写卡
+    - speaking    # 生成口语卡
+
+```
+
+### 3. 调整语速
+
+Azure 的语速控制非常精准，支持百分比调整：
+
+```yaml
 speed_config:
-  word_slow: "-30%"      # 单词慢读
-  word_fast: "0%"        # 单词快读
+  word_slow: "-30%"      # 单词慢读 (适合听清发音细节)
+  word_fast: "0%"        # 单词常速
   definitions: "0%"      # 释义语速
-  examples: "-10%"       # 例句语速
-
-paths:
-  input_txt: "words.txt"           # 输入的单词列表
-  output_package: "My_English_List.apkg"  # 输出的 Anki 包
-```
-
-### 3. 准备单词列表
-
-在 `words.txt` 文件中添加你要学习的单词，每行一个：
+  examples: "-10%"       # 例句语速 (稍慢一点方便模仿)
 
 ```
-tear (crying)
-hold on
-content (happy)
-serendipity
-a piece of cake
+
+---
+
+## 🃏 第三步：三种卡片模式介绍
+
+本项目支持三种不同的卡片模板，针对不同的学习场景。
+
+### 1. 📖 词汇卡 (Vocab Card)
+
+**适用场景**：日常背单词，不仅要认识，还要听得懂。
+
+* **正面**：
+* 大号单词显示
+* 英式音标
+* **双速音频**（先慢速朗读，后常速朗读，强化听觉记忆）
+
+
+* **背面**：
+* 英文释义（IELTS 5.5-6.5 难度，通俗易懂）
+* 场景例句
+* **隐藏式中文**：点击按钮或按 `C` 键才显示中文翻译，强迫自己先看英文。
+
+
+
+![词汇卡正面截图]
+*(在此处插入词汇卡正面截图)*
+
+![词汇卡背面截图]
+*(在此处插入词汇卡背面截图)*
+
+### 2. 🎧 听写卡 (Dictation Card)
+
+**适用场景**：训练拼写能力和辨音能力。
+
+* **正面**：
+* **没有单词文本**，只有一个巨大的播放按钮。
+* 输入框：直接在卡片上输入你听到的单词（Anki 原生支持）。
+
+
+* **背面**：
+* 自动校验拼写：显示你输入的对错，标红错误字母。
+* 单词信息：显示正确拼写、音标。
+* **隐藏式释义**：默认折叠英文和中文释义，避免干扰校验。
+
+
+
+![听写卡正面截图]
+*(在此处插入听写卡正面截图)*
+
+![听写卡背面截图]
+*(在此处插入听写卡校验结果截图)*
+
+### 3. 🗣️ 口语卡 (Speaking Card)
+
+**适用场景**：训练“中译英”思维和时态运用，克服“哑巴英语”。
+
+* **正面**：
+* 只显示**中文意图**（例如：“我们要抓住这个机会”）。
+* 目标：让你大脑快速反应出对应的英文短语。
+
+
+* **背面**：
+* 揭晓地道的英文短语 (Word/Phrase)。
+* **时态特训 (Tense Practice)**：AI 会生成 3 个不同时态（过去、现在、将来/一般）的例句，并分别配音。
+* 帮助你不仅学会短语，还学会如何在不同语境下变形使用。
+
+
+
+![口语卡正面截图]
+*(在此处插入口语卡正面截图)*
+
+![口语卡背面截图]
+*(在此处插入口语卡背面截图)*
+
+---
+
+## 🚀 第四步：使用方法
+
+### 1. 准备单词列表
+
+在项目目录下创建 `words.txt`，每行一个单词或短语。支持添加括号指定语境：
+
+```text
+tear (crying)        <-- 指定名词"眼泪"的含义和发音
+tear (rip)           <-- 指定动词"撕裂"的含义和发音
+hold on              <-- 动词短语
+serendipity          <-- 普通单词
+
 ```
 
-### 4. 运行程序
+### 2. 安装依赖
+
+```bash
+pip install -r requirements.txt
+
+```
+
+### 3. 运行程序
 
 ```bash
 python main.py
+
 ```
 
-程序将自动：
-1. 读取配置文件
-2. 加载单词列表
-3. 为每个单词生成内容和语音
-4. 打包成 Anki 卡组
-5. 清理临时文件
+程序将自动执行：
 
-### 5. 导入 Anki
+1. 读取 `words.txt`。
+2. 并发请求 DeepSeek 生成内容。
+3. 并发请求 Azure 生成音频（会自动跳过已存在的音频）。
+4. 打包生成 `.apkg` 文件。
 
-双击生成的 `.apkg` 文件，即可导入到 Anki！
+### 4. 导入 Anki
 
-## 配置说明
+双击生成的 `speakcard.apkg` (文件名可在 config 中修改)，Anki 会自动导入并识别更新（相同单词不会重复创建，会保留学习进度）。
 
-### API 配置
+---
 
-- **openai_api_key**: DeepSeek/OpenAI API 密钥（用于生成释义和例句）
-- **azure_speech_key**: Azure 语音服务密钥（用于 TTS 语音合成）
+## 📝 常见问题
 
-### 语速配置
+**Q: 为什么生成的音频没有声音？**
+A: 请检查 `config.yaml` 中的 `azure_speech_key` 是否正确，以及你的 Azure 账号是否欠费（免费额度虽然多，但也有上限）。
 
-语速采用百分比格式：
-- `-30%`: 减慢 30%
-- `0%`: 原速
-- `+20%`: 加快 20%
+**Q: 如何修改卡片样式（字体大小、颜色）？**
+A: 卡片样式内嵌在 `generate.py` 的 CSS 变量中。搜索 `:root { --base-font-size: 16px; }` 即可快速调整全局字体大小。
 
-### 单词格式说明
+**Q: 支持 Mac/Windows/iOS/Android 吗？**
+A: 支持。生成的 `.apkg` 是标准 Anki 包，可以在任何平台的 Anki 客户端使用。
 
-支持以下格式：
-- **普通单词**: `apple`
-- **词组**: `look forward to`
-- **多义词（指定语境）**: `tear (crying)` - 括号内容用于确定发音和优先释义
+---
 
-## 文件说明
-
-- `main.py`: 主程序入口
-- `generate.py`: 核心生成逻辑（LLM + TTS + Anki）
-- `config.yaml`: 配置文件
-- `words.txt`: 单词列表（示例）
-- `requirements.txt`: Python 依赖包
-
-## 常见问题
-
-### Q: 如何修改语音性别或口音？
-
-编辑 `config.yaml` 中的 `azure_voice_name`，可选值：
-- `en-GB-SoniaNeural` (英式女声)
-- `en-GB-RyanNeural` (英式男声)
-- `en-US-JennyNeural` (美式女声)
-- 更多选项参考 [Azure 文档](https://learn.microsoft.com/zh-cn/azure/ai-services/speech-service/language-support?tabs=tts)
-
-### Q: 临时音频文件会占用空间吗？
-
-不会，程序执行完毕后会自动删除 `media_temp` 目录。
-
-### Q: 可以自定义卡片样式吗？
-
-可以，编辑 `generate.py` 中的 CSS 和 HTML 模板部分。
-
-## 许可证
+## License
 
 MIT License
