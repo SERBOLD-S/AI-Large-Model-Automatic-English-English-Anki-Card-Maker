@@ -3,12 +3,12 @@
 # API 密钥配置
 api_keys:
   # DeepSeek/OpenAI API Key (用于生成释义和例句)
-  openai_api_key: "请在此填入你的 OpenAI/DeepSeek API Key"
+  openai_api_key: "YOUR_OPENAI_API_KEY"
   openai_base_url: "https://ark.cn-beijing.volces.com/api/v3"
   openai_model: "deepseek-v3-2-251201"
   
   # Azure TTS API Key (用于语音合成)
-  azure_speech_key: "请在此填入你的 Azure 语音服务订阅密钥"
+  azure_speech_key: "YOUR_AZURE_SPEECH_KEY"
   azure_region: "eastus"
   azure_voice_name: "en-GB-SoniaNeural"
 
@@ -19,18 +19,41 @@ speed_config:
   definitions: "0%"      # 释义语速 (原速)
   examples: "-10%"       # 例句语速 (稍慢10%)
 
+# 性能配置
+performance:
+  # 并行处理的最大卡片数量
+  # 数值越大，速度越快，但消耗的 API 配额也越多
+  # 建议值: 5-20 (根据你的网络和 API 限制调整)
+  # 注意: Azure TTS 并发连接限制约 20 个，设置过高会导致连接失败
+  max_workers: 10
+  
+  # 重试配置
+  max_retries: 5           # 每张卡片失败后的最大重试次数 (增加到5次)
+  retry_delay: 10          # 重试间隔时间（秒），增加到10秒以避免 API 速率限制
+
 # 文件路径配置
 paths:
   # 输入的单词列表 txt 文件路径 (每行一个单词或词组)
-  input_txt: "words.txt"
+  input_txt: "speaker_words.txt"
   
   # 输出的 Anki 包文件名
-  output_package: "My_English_List.apkg"
+  output_package: "speakcard.apkg"
   
   # 临时音频文件存放目录 (生成完成后会被自动删除)
   temp_media_dir: "media_temp"
+  
+  # 失败单词日志文件（记录最终重试失败的单词，格式与 words.txt 相同）
+  error_log: "errorword.txt"
 
 # Anki 卡片配置
 anki:
-  deck_name: "new words deck"
+  deck_name: "speaking card"
   model_name: "Modern Auto Vocab"
+  
+  # [升级] 卡片类型：多选列表，支持并行生成多种卡片
+  # 可选值: vocab (词汇卡), dictation (听写卡), speaking (口语卡)
+  # vocab - 正面显示单词+音标+音频，背面显示释义和例句
+  # dictation - 正面只有音频，用户听音频输入单词，系统自动校验
+  # speaking - 正面显示中文意图，背面显示英文短语+时态例句（适合口语回译练习）
+  card_types:
+    - speaking

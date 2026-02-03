@@ -114,10 +114,25 @@ def main():
     
     speed_config = config['speed_config']
     
+    # 性能配置
+    performance_config = config.get('performance', {})
+    max_workers = performance_config.get('max_workers', 10)      # 默认10
+    max_retries = performance_config.get('max_retries', 3)       # 默认3次重试
+    retry_delay = performance_config.get('retry_delay', 2)       # 默认2秒延迟
+    
     input_txt = config['paths']['input_txt']
     output_package = config['paths']['output_package']
     temp_media_dir = config['paths']['temp_media_dir']
+    error_log_file = config['paths'].get('error_log', 'errorword.txt')  # 默认 errorword.txt
     deck_name = config['anki']['deck_name']
+    
+    # 支持新版 card_types (列表) 和旧版 card_type (字符串)
+    card_types = config['anki'].get('card_types')
+    if card_types is None:
+        # 如果没有 card_types，尝试读取旧版 card_type
+        card_type = config['anki'].get('card_type', 'vocab')
+    else:
+        card_type = card_types
     
     # 3. 加载单词列表
     word_list = load_word_list(input_txt)
@@ -141,7 +156,12 @@ def main():
             api_config=api_config,
             azure_config=azure_config,
             speed_config=speed_config,
-            deck_name=deck_name
+            deck_name=deck_name,
+            card_type=card_type,
+            max_workers=max_workers,
+            max_retries=max_retries,
+            retry_delay=retry_delay,
+            error_log_file=error_log_file
         )
         
         print()
